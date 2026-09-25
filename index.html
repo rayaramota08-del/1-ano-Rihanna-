@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#8db7ee">
+<title>Rihanna • 1 aninho</title>
+<style>
+:root{--blue:#77a9e8;--gold:#d8a62a;--ink:#27466f}
+*{box-sizing:border-box} body{margin:0;font-family:Georgia,"Times New Roman",serif;background:linear-gradient(145deg,#eef7ff,#d8eaff);color:var(--ink)}
+main{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:min(720px,100%);background:#fff8;border:1px solid #fff;border-radius:24px;padding:18px;box-shadow:0 12px 40px #5378a833;backdrop-filter:blur(8px)}
+h1{text-align:center;margin:2px 0 4px;font-size:clamp(28px,7vw,48px);color:var(--gold)}
+.sub{text-align:center;margin:0 0 14px;font-size:18px}
+.stage{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;border-radius:20px;background:#dfefff}
+video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+canvas{display:none}
+.frame{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+button{border:0;border-radius:999px;padding:13px 20px;font-weight:700;font-size:16px;background:var(--blue);color:white;box-shadow:0 5px 14px #477bb744}
+button.secondary{background:white;color:var(--ink);border:1px solid #b9d3f4}
+button:disabled{opacity:.45}
+.note{text-align:center;font-family:Arial,sans-serif;font-size:13px;opacity:.72;margin:10px 4px 0}
+.gallery{margin-top:22px}
+.gallery h2{text-align:center;margin:0 0 10px;color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.grid img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:#eaf3ff}
+.status{text-align:center;font-family:Arial,sans-serif;font-size:14px;min-height:20px;margin-top:8px}
+#download{display:none}
+</style>
+</head>
+<body>
+<main><section class="card">
+<h1>Rihanna</h1><p class="sub">✨ 1 aninho ✨</p>
+
+<div class="stage">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas"></canvas>
+  <img class="frame" src="moldura.png" alt="Moldura da festa">
+</div>
+
+<div class="controls">
+  <button id="start">📸 Abrir câmera</button>
+  <button id="capture" disabled>✨ Tirar foto</button>
+  <button id="download" class="secondary">⬇️ Salvar foto</button>
+</div>
+<div id="status" class="status"></div>
+<p class="note">A foto fica no celular quando você tocar em “Salvar foto”. A galeria compartilhada é ativada depois de conectar o Firebase, conforme o guia.</p>
+
+<section class="gallery">
+  <h2>💙 Fotos dos convidados</h2>
+  <div id="grid" class="grid"></div>
+</section>
+</section></main>
+
+<script>
+const video=document.getElementById('video'), canvas=document.getElementById('canvas');
+const start=document.getElementById('start'), capture=document.getElementById('capture');
+const download=document.getElementById('download'), statusEl=document.getElementById('status');
+let stream=null, lastBlob=null;
+
+start.onclick=async()=>{
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});
+    video.srcObject=stream; capture.disabled=false; statusEl.textContent="Câmera aberta 💙";
+  }catch(e){statusEl.textContent="Não consegui acessar a câmera. Confira a permissão do navegador."}
+};
+
+capture.onclick=async()=>{
+  const w=video.videoWidth||720, h=video.videoHeight||960;
+  canvas.width=w; canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(video,0,0,w,h);
+  const frame=new Image(); frame.src='moldura.png';
+  await new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=reject});
+  ctx.drawImage(frame,0,0,w,h);
+  canvas.style.display='block'; video.style.display='none';
+  canvas.toBlob(blob=>{
+    lastBlob=blob;
+    download.style.display='inline-block';
+    download.onclick=()=>{
+      const a=document.createElement('a'); a.href=URL.createObjectURL(lastBlob);
+      a.download='rihanna-1-aninho.png'; a.click();
+    };
+    statusEl.textContent="Foto pronta! Salve no celular. ✨";
+  },'image/png');
+};
+</script>
+</body>
+</html>
